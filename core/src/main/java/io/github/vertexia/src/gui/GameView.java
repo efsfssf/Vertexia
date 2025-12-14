@@ -219,7 +219,7 @@ public class GameView extends JComponent {
             for(int j = 0; j < gridSize; ++j) {
                 Types.TERRAIN t = board.getTerrainAt(i,j);
                 if (t == CITY) {
-                    Image toPaint = t.getImage(null);
+                    Image toPaint = t.getTexture(null);
                     paintImageRotated(g, j * CELL_SIZE, i * CELL_SIZE, toPaint, CELL_SIZE, panTranslate);
                 }
             }
@@ -272,11 +272,11 @@ public class GameView extends JComponent {
                 Types.RESOURCE r = board.getResourceAt(i,j);
                 if (actionable[i][j]) paintImageRotated(g, j * CELL_SIZE, i * CELL_SIZE, shineImg, CELL_SIZE, panTranslate);
                 int imgSize = (int) (CELL_SIZE * 0.75);
-                paintImageRotated(g, j * CELL_SIZE, i * CELL_SIZE, (r == null) ? null : r.getImage(t), imgSize, panTranslate);
+                paintImageRotated(g, j * CELL_SIZE, i * CELL_SIZE, (r == null) ? null : r.getTexture(t), imgSize, panTranslate);
 
                 Types.BUILDING b = board.getBuildingAt(i,j);
                 if (b != null && b != Types.BUILDING.CUSTOMS_HOUSE && !(b.isTemple())) imgSize = CELL_SIZE;
-                paintImageRotated(g, j*CELL_SIZE, i*CELL_SIZE, (b == null) ? null : b.getImage(), imgSize, panTranslate);
+                paintImageRotated(g, j*CELL_SIZE, i*CELL_SIZE, (b == null) ? null : b.getTexture(), imgSize, panTranslate);
             }
         }
     }
@@ -331,13 +331,13 @@ public class GameView extends JComponent {
     }
 
     private void paintUnit(Graphics2D g, int x, int y, Types.UNIT type, int imgSize, int tribeId, boolean exhausted) {
-        String imgFile = type.getImageFile();
+        String imgFile = type.getTextureFile();
         if (exhausted) {
             String exhaustedStr = imgFile + tribeId + "Exhausted.png";
             Image exhaustedImg = ImageIO.GetInstance().getImage(exhaustedStr);
             paintImage(g, x, y, exhaustedImg, imgSize, panTranslate);
         } else {
-            paintImage(g, x, y, type.getImage(tribeId), imgSize, panTranslate);
+            paintImage(g, x, y, type.getTexture(tribeId), imgSize, panTranslate);
         }
     }
 
@@ -349,7 +349,7 @@ public class GameView extends JComponent {
                 if (possibleActions != null && possibleActions.size() > 0) {
                     for (Action a : possibleActions) {
                         if (!(a.getActionType() == Types.ACTION.EXAMINE || a.getActionType() == Types.ACTION.CAPTURE)) {
-                            Image actionImg = Types.ACTION.getImage(a);
+                            Image actionImg = Types.ACTION.getTexture(a);
 
                             if (actionImg != null) {
                                 Vector2d pos = GUI.getActionPosition(gameState, a);
@@ -375,7 +375,7 @@ public class GameView extends JComponent {
         for (Map.Entry<Integer, ArrayList<Action>> e: actions.entrySet()) {
             for (Action a : e.getValue()) {
                 if (a.getActionType() == EXAMINE || a.getActionType() == CAPTURE) {
-                    Image actionImg = Types.ACTION.getImage(a);
+                    Image actionImg = Types.ACTION.getTexture(a);
                     if (actionImg != null) {
                         Vector2d pos = GUI.getActionPosition(gameState, a);
 
@@ -699,56 +699,56 @@ public class GameView extends JComponent {
             boolean right = (j < gridSize - 1 && board.getTerrainAt(i, j + 1) != SHALLOW_WATER && board.getTerrainAt(i, j + 1) != DEEP_WATER);
             if (down) {
                 if (left) {
-                    toPaint = t.getImage("down-left");
+                    toPaint = t.getTexture("down-left");
                 } else if (right) {
                     if (top) {
-                        toPaint = t.getImage("top-down-right");
+                        toPaint = t.getTexture("top-down-right");
                     } else {
                         if (t == SHALLOW_WATER && (diagUR == SHALLOW_WATER || diagUR == DEEP_WATER)) {
-                            toPaint = t.getImage("down-right-ur");
+                            toPaint = t.getTexture("down-right-ur");
                         } else {
-                            toPaint = t.getImage("down-right");
+                            toPaint = t.getTexture("down-right");
                         }
                     }
                 } else if (top) {
                     if (t == SHALLOW_WATER && (diagUR == SHALLOW_WATER || diagUR == DEEP_WATER)) {
-                        toPaint = t.getImage("top-down-ur");
+                        toPaint = t.getTexture("top-down-ur");
                     } else {
-                        toPaint = t.getImage("top-down");
+                        toPaint = t.getTexture("top-down");
                     }
                 } else {
-                    toPaint = t.getImage("down");
+                    toPaint = t.getTexture("down");
                 }
             } else if (top) {
                 if (t == SHALLOW_WATER && (j == gridSize-1 || diagUR == SHALLOW_WATER || diagUR == DEEP_WATER)) {
                     if (left) {
-                        toPaint = t.getImage("top-left-ur");
+                        toPaint = t.getTexture("top-left-ur");
                     } else {
-                        toPaint = t.getImage("top-ur");
+                        toPaint = t.getTexture("top-ur");
                     }
                 } else {
                     if (right) {
                         if (left) {
-                            toPaint = t.getImage("top-left-right");
+                            toPaint = t.getTexture("top-left-right");
                         } else {
-                            toPaint = t.getImage("top-right");
+                            toPaint = t.getTexture("top-right");
                         }
                     } else if (left) {
-                        toPaint = t.getImage("top-left");
+                        toPaint = t.getTexture("top-left");
                     } else {
-                        toPaint = t.getImage("top");
+                        toPaint = t.getTexture("top");
                     }
                 }
             } else if (right) {
                 if (i == 0 || j < gridSize - 1 && t == SHALLOW_WATER && (diagUR == SHALLOW_WATER || diagUR == DEEP_WATER)) {
-                    toPaint = t.getImage("right-ur");
+                    toPaint = t.getTexture("right-ur");
                 } else {
-                    toPaint = t.getImage("right");
+                    toPaint = t.getTexture("right");
                 }
             } else if (left) {
-                toPaint = t.getImage("left");
+                toPaint = t.getTexture("left");
             } else {
-                toPaint = t.getImage(null);
+                toPaint = t.getTexture(null);
             }
         } else {
             // If this is the last tile on the row, or the tile underneath is water, get the '-down' img
@@ -759,36 +759,36 @@ public class GameView extends JComponent {
             if (down) {
                 if (j == gridSize - 1) {
                     if (cornerDR) {
-                        toPaint = t.getImage("corner-dr");
+                        toPaint = t.getTexture("corner-dr");
                     } else {
-                        toPaint = t.getImage("down-dr");
+                        toPaint = t.getTexture("down-dr");
                     }
                 } else {
                     if (left) {
                         if (j == 0) {
                             if (i < gridSize - 1 && (board.getTerrainAt(i, j + 1) == SHALLOW_WATER ||
                                             board.getTerrainAt(i, j + 1) == DEEP_WATER)) {
-                                toPaint = t.getImage("down-left-el-dr");
+                                toPaint = t.getTexture("down-left-el-dr");
                             } else {
-                                toPaint = t.getImage("down-left-el");
+                                toPaint = t.getTexture("down-left-el");
                             }
                         } else if (i == gridSize - 1) {
                             if (board.getTerrainAt(i - 1, j) == SHALLOW_WATER
                                     || board.getTerrainAt(i - 1, j) == DEEP_WATER) {
-                                toPaint = t.getImage("down-left-ed-ul");
+                                toPaint = t.getTexture("down-left-ed-ul");
                             } else {
-                                toPaint = t.getImage("down-left-ed");
+                                toPaint = t.getTexture("down-left-ed");
                             }
                         } else {
-                            toPaint = t.getImage("down-left");
+                            toPaint = t.getTexture("down-left");
                         }
                     } else {
                         if (j < gridSize - 1 && i < gridSize - 1 &&
                                 (board.getTerrainAt(i, j + 1) == SHALLOW_WATER ||
                                 board.getTerrainAt(i, j + 1) == DEEP_WATER)) {
-                            toPaint = t.getImage("down-dr");
+                            toPaint = t.getTexture("down-dr");
                         } else {
-                            toPaint = t.getImage("down");
+                            toPaint = t.getTexture("down");
                         }
                     }
                 }
@@ -796,16 +796,16 @@ public class GameView extends JComponent {
                 if (i == 0 || board.getTerrainAt(i - 1, j) == SHALLOW_WATER ||
                         board.getTerrainAt(i - 1, j) == DEEP_WATER) {
                     if (cornerUL) {
-                        toPaint = t.getImage("corner-ul");
+                        toPaint = t.getTexture("corner-ul");
                     } else {
                         if (j == 0) {
-                            toPaint = t.getImage("left");
+                            toPaint = t.getTexture("left");
                         } else {
-                            toPaint = t.getImage("left-ul");
+                            toPaint = t.getTexture("left-ul");
                         }
                     }
                 } else {
-                    toPaint = t.getImage("left");
+                    toPaint = t.getTexture("left");
                 }
             } else {
                 Types.TERRAIN tl = board.getTerrainAt(i, j - 1);
@@ -814,9 +814,9 @@ public class GameView extends JComponent {
                 if (i < gridSize-1 && j > 0 && (tld == SHALLOW_WATER || tld == DEEP_WATER) &&
                         (tl != SHALLOW_WATER && tl != DEEP_WATER) &&
                         (td != SHALLOW_WATER && td != DEEP_WATER)) {
-                    toPaint = t.getImage("dl");
+                    toPaint = t.getTexture("dl");
                 } else {
-                    toPaint = t.getImage(null);
+                    toPaint = t.getTexture(null);
                 }
             }
         }

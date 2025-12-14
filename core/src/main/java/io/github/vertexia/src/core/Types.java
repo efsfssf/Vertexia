@@ -7,9 +7,12 @@ import io.github.vertexia.src.core.actions.tribeactions.command.*;
 import io.github.vertexia.src.core.actions.unitactions.command.*;
 import io.github.vertexia.src.core.actors.units.*;
 import org.json.JSONObject;
-import io.github.vertexia.src.utils.file.ImageIO;
+
+import io.github.vertexia.src.utils.TextureIO;
 import io.github.vertexia.src.utils.Vector2d;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+
 import java.util.*;
 
 import static io.github.vertexia.src.core.TribesConfig.*;
@@ -181,15 +184,15 @@ public class Types {
             this.tech = t;
         }
         public int getKey() {  return key; }
-        public Image getImage(TERRAIN t) {
+        public Texture getTexture(TERRAIN t) {
             if (this == WHALES && t != null) {
                 if (t == DEEP_WATER) {
-                    return ImageIO.GetInstance().getImage(imageFile);
+                    return TextureIO.GetInstance().getTexture(imageFile);
                 } else {
-                    return ImageIO.GetInstance().getImage(secondaryImageFile);
+                    return TextureIO.GetInstance().getTexture(secondaryImageFile);
                 }
             }
-            return ImageIO.GetInstance().getImage(imageFile);
+            return TextureIO.GetInstance().getTexture(imageFile);
         }
         public int getCost() {return cost;}
         public int getBonus() {return bonus;}
@@ -310,7 +313,7 @@ public class Types {
         public int getKey() {  return key; }
         public int getCost() {return cost; }
         public int getBonus() {return bonus; }
-        public Image getImage() { return ImageIO.GetInstance().getImage(imageFile); }
+        public Texture getTexture() { return TextureIO.GetInstance().getTexture(imageFile); }
 
         public Types.RESOURCE getResourceConstraint()
         {
@@ -504,14 +507,14 @@ public class Types {
         SUPERUNIT(11, "img/unit/superunit/", "img/weapons/melee/tile003.png", SUPERUNIT_COST, null, SUPERUNIT_POINTS); //+50
 
         private int key;
-        private String imageFile, weapon;
+        private String textureFile, weapon;
         private int cost;
         private TECHNOLOGY requirement;
         private int points;
 
-        UNIT(int numVal, String imageFile, String weaponFile, int cost, Types.TECHNOLOGY requirement, int points) {
+        UNIT(int numVal, String textureFile, String weaponFile, int cost, Types.TECHNOLOGY requirement, int points) {
             this.key = numVal;
-            this.imageFile = imageFile;
+            this.textureFile = textureFile;
             this.cost = cost;
             this.requirement = requirement;
             this.points = points;
@@ -536,13 +539,13 @@ public class Types {
             return null;
         }
 
-        public Image getImage(int tribeKey) { return ImageIO.GetInstance().getImage(imageFile + tribeKey + ".png"); }
-        public String getImageFile() { return imageFile; }
-        public Image getWeaponImage(int tribeKey) {
+        public Texture getTexture(int tribeKey) { return TextureIO.GetInstance().getTexture(textureFile + tribeKey + ".png"); }
+        public String getTextureFile() { return textureFile; }
+        public Texture getWeaponImage(int tribeKey) {
             if (this == SHIP || this == BATTLESHIP || this == ARCHER || this == MIND_BENDER) {
-                return ImageIO.GetInstance().getImage(weapon + tribeKey + ".png");
+                return TextureIO.GetInstance().getTexture(weapon + tribeKey + ".png");
             }
-            return ImageIO.GetInstance().getImage(weapon);
+            return TextureIO.GetInstance().getTexture(weapon);
         }
         public int getCost() {
             return cost;
@@ -728,12 +731,12 @@ public class Types {
 
         public int getKey() {  return key; }
         public char getMapChar() {return mapChar;}
-        public Image getImage(String suffix) {
+        public Texture getTexture(String suffix) {
             if (suffix == null || suffix.equals("")) {
-                return ImageIO.GetInstance().getImage(imageFile);
+                return TextureIO.GetInstance().getTexture(imageFile);
             }
             String[] splitPath = imageFile.split("\\.");
-            return ImageIO.GetInstance().getImage(splitPath[0] + "-" + suffix + "." + splitPath[1]);
+            return TextureIO.GetInstance().getTexture(splitPath[0] + "-" + suffix + "." + splitPath[1]);
         }
 
 
@@ -816,8 +819,8 @@ public class Types {
             return tech;
         }
 
-        public static Image getImage(Action a) {
-            return ImageIO.GetInstance().getImage(a.getActionType().imgPath);
+        public static Texture getTexture(Action a) {
+            return TextureIO.GetInstance().getTexture(a.getActionType().imgPath);
         }
 
         public ActionCommand getCommand()
