@@ -9,8 +9,7 @@ import io.github.vertexia.src.core.actors.units.*;
 import org.json.JSONObject;
 import io.github.vertexia.src.utils.file.ImageIO;
 import io.github.vertexia.src.utils.Vector2d;
-
-import java.awt.*;
+import com.badlogic.gdx.graphics.Color;
 import java.util.*;
 
 import static io.github.vertexia.src.core.TribesConfig.*;
@@ -18,6 +17,7 @@ import static io.github.vertexia.src.core.Types.BUILDING.MONUMENT_STATUS.*;
 import static io.github.vertexia.src.core.Types.TECHNOLOGY.*;
 import static io.github.vertexia.src.core.Types.TERRAIN.*;
 import static io.github.vertexia.src.core.Types.UNIT.*;
+import static io.github.vertexia.src.utils.GdxCompat.*;
 
 public class Types {
 
@@ -86,29 +86,29 @@ public class Types {
 
     public enum TRIBE{
         XIN_XI(0, "Xin-Xi", CLIMBING, WARRIOR,
-                new Color(251, 2, 7), new Color(253, 130, 123), new Color(174, 66, 48)),
+                toColor(251, 2, 7), toColor(253, 130, 123), toColor(174, 66, 48)),
         IMPERIUS(1, "Imperius", ORGANIZATION, WARRIOR,
-                new Color(0, 0, 255), new Color(102, 125, 255), new Color(50, 73, 177)),
+                toColor(0, 0, 255), toColor(102, 125, 255), toColor(50, 73, 177)),
         BARDUR(2, "Bardur", HUNTING, WARRIOR,
-                new Color(76, 76, 76), new Color(176, 178, 178), new Color(70, 58, 58)),
+                toColor(76, 76, 76), toColor(176, 178, 178), toColor(70, 58, 58)),
         OUMAJI(3, "Oumaji", RIDING, RIDER,
-                new Color(255, 255, 10), new Color(242, 255, 100), new Color(146, 144, 0)),
+                toColor(255, 255, 10), toColor(242, 255, 100), toColor(146, 144, 0)),
         KICKOO(4, "Kickoo", FISHING, WARRIOR,
-                new Color(0, 255, 0), new Color(82, 245, 82, 255), new Color(0, 145, 0, 255)),
+                toColor(0, 255, 0), toColor(82, 245, 82, 255), toColor(0, 145, 0, 255)),
         HOODRICK(5, "Hoodrick", ARCHERY, ARCHER,
-                new Color(153, 102, 0), new Color(199, 137, 13), new Color(102, 69, 0, 255)),
+                toColor(153, 102, 0), toColor(199, 137, 13), toColor(102, 69, 0, 255)),
         LUXIDOOR(6, "Luxidoor", null, WARRIOR,
-                new Color(171, 59, 214), new Color(191, 81, 234), new Color(116, 41, 145, 255)),
+                toColor(171, 59, 214), toColor(191, 81, 234), toColor(116, 41, 145, 255)),
         VENGIR(7, "Vengir", SMITHERY, SWORDMAN,
-                new Color(255, 255, 255), new Color(220, 220, 220), new Color(145, 145, 145)),
+                toColor(255, 255, 255), toColor(220, 220, 220), toColor(145, 145, 145)),
         ZEBASI(8, "Zebasi", FARMING, WARRIOR,
-                new Color(255, 153, 0), new Color(255, 171, 47), new Color(145, 87, 0)),
+                toColor(255, 153, 0), toColor(255, 171, 47), toColor(145, 87, 0)),
         AI_MO(9, "Ai-Mo", MEDITATION, WARRIOR,
-                new Color(54, 226, 170), new Color(168, 255, 229), new Color(35, 145, 109)),
+                toColor(54, 226, 170), toColor(168, 255, 229), toColor(35, 145, 109)),
         QUETZALI(10, "Quetzali", SHIELDS, DEFENDER,
-                new Color(39, 92, 74), new Color(79, 165, 136), new Color(20, 51, 41)),
+                toColor(39, 92, 74), toColor(79, 165, 136), toColor(20, 51, 41)),
         YADAKK(11, "Yadakk", ROADS, WARRIOR,
-                new Color(125, 38, 28), new Color(177, 70, 57), new Color(92, 33, 13));
+                toColor(125, 38, 28), toColor(177, 70, 57), toColor(92, 33, 13));
 
         private int key;
         private String name;
@@ -681,8 +681,8 @@ public class Types {
          * @return colours of results.
          */
         public Color getColor() {
-            if (key == WIN.key) return Color.green;
-            if (key == LOSS.key) return Color.red;
+            if (key == WIN.key) return Color.GREEN;
+            if (key == LOSS.key) return Color.RED;
             return null;
         }
 

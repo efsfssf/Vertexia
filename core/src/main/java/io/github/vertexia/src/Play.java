@@ -6,22 +6,6 @@ import io.github.vertexia.src.core.game.Game;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import io.github.vertexia.src.players.*;
-import io.github.vertexia.src.players.emcts.EMCTSAgent;
-import io.github.vertexia.src.players.emcts.EMCTSParams;
-import io.github.vertexia.src.players.mc.MCParams;
-import io.github.vertexia.src.players.mc.MonteCarloAgent;
-import io.github.vertexia.src.players.mcts.MCTSParams;
-import io.github.vertexia.src.players.mcts.MCTSPlayer;
-import io.github.vertexia.src.players.oep.OEPAgent;
-import io.github.vertexia.src.players.oep.OEPParams;
-import io.github.vertexia.src.players.osla.OSLAParams;
-import io.github.vertexia.src.players.osla.OneStepLookAheadAgent;
-import io.github.vertexia.src.players.portfolio.SimplePortfolio;
-import io.github.vertexia.src.players.portfolioMCTS.PortfolioMCTSParams;
-import io.github.vertexia.src.players.portfolioMCTS.PortfolioMCTSPlayer;
-import io.github.vertexia.src.players.rhea.RHEAAgent;
-import io.github.vertexia.src.players.rhea.RHEAParams;
-import io.github.vertexia.src.players.portfolio.RandomPortfolio;
 import io.github.vertexia.src.utils.file.IO;
 
 import java.util.*;
@@ -37,12 +21,28 @@ public class Play {
     private static long AGENT_SEED = -1;
     private static long GAME_SEED = -1;
 
-    public static void main(String[] args) {
+    private final JSONObject config;
+
+    public Play(JSONObject config) {
+        this.config = config;
+    }
+
+    public void start() {
+        try {
+            if (config != null && config.length() > 0) {
+                runFromConfig(config);
+            } else {
+                System.out.println("Error: Couldn't find config");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void runFromConfig(JSONObject config) throws Exception {
 
         try {
-            JSONObject config = new IO().readJSON("play.json");
-
-            if (config != null && !config.isEmpty()) {
+            if (config != null && config.length() > 0) {
                 String runMode = config.getString("Run Mode");
                 Constants.VERBOSE = config.getBoolean("Verbose");
 
