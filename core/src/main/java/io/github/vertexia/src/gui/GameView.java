@@ -1,7 +1,6 @@
 package io.github.vertexia.src.gui;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.*;
 
 import io.github.vertexia.src.core.Types;
@@ -18,6 +17,7 @@ import io.github.vertexia.src.core.game.Board;
 import io.github.vertexia.src.core.game.Game;
 import io.github.vertexia.src.core.game.GameState;
 import io.github.vertexia.src.core.actions.Action;
+import io.github.vertexia.src.utils.TextureIO;
 import io.github.vertexia.src.utils.file.ImageIO;
 import io.github.vertexia.src.utils.Pair;
 import io.github.vertexia.src.utils.Vector2d;
@@ -26,7 +26,13 @@ import static io.github.vertexia.src.core.Constants.*;
 import static io.github.vertexia.src.core.Types.TERRAIN.*;
 import static io.github.vertexia.src.core.Types.UNIT.*;
 import static io.github.vertexia.src.core.Types.ACTION.*;
+import static io.github.vertexia.src.utils.GdxCompat.toColor;
 import static io.github.vertexia.src.utils.Vector2d.manhattanDistance;
+
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+
+import org.w3c.dom.Text;
 
 @SuppressWarnings({"SuspiciousNameCombination", "unchecked"})
 public class GameView extends JComponent {
@@ -36,25 +42,25 @@ public class GameView extends JComponent {
     private Board board; //This only counts terrains. Needs to be enhanced with actors, resources, etc.
     private GameState gameState;
 //    private Image backgroundImg;
-    private Image fogImg, shineImg;
+    private Texture fogImg, shineImg;
     private InfoView infoView;
     private Vector2d panTranslate;  // Used to translate all coordinates for objects drawn on screen
 
-    private Color progressColor = new Color(53, 183, 255);
-    private Color negativeColor = new Color(255, 63, 73);
-    private Image starImg, starShadow, capitalImg, capitalShadow, cityWalls; // road;
-    private Image roadVhalf, roadDhalf;
+    private Color progressColor = toColor(53, 183, 255);
+    private Color negativeColor = toColor(255, 63, 73);
+    private Texture starImg, starShadow, capitalImg, capitalShadow, cityWalls; // road;
+    private Texture roadVhalf, roadDhalf;
 
     boolean[][] actionable;
 
     // Action animations
-    private ArrayList<Pair<Pair<Image, Vector2d>,Pair<Image, Vector2d>>> sourceTargetAnimationInfo;
+    private ArrayList<Pair<Pair<Texture, Vector2d>,Pair<Texture, Vector2d>>> sourceTargetAnimationInfo;
     private ArrayList<Double> animationSpeed;
     private ArrayList<Pair<Integer, Integer>> actionAnimationUnitsTribe;
     private UnitAction animatedAction;
 
-    private Image[] explosionEffect, pierceEffect;
-    private Image[][] slashEffect, healEffect, convertEffect;  // Different per tribe
+    private Texture[] explosionEffect, pierceEffect;
+    private Texture[][] slashEffect, healEffect, convertEffect;  // Different per tribe
     private int effectDrawingIdx = -1, effectTribeIdx;
     private ArrayList<Vector2d> effectPositions;
     private EFFECT effectType;  // What effect are we drawing?
@@ -89,46 +95,46 @@ public class GameView extends JComponent {
 //        int d = (int) Math.sqrt(size * size * 2);
         dimension = new Dimension(GUI_GAME_VIEW_SIZE, GUI_GAME_VIEW_SIZE);
 
-//        backgroundImg = PLAIN.getImage(null);
-        fogImg = ImageIO.GetInstance().getImage("img/fog.png");
-        shineImg = ImageIO.GetInstance().getImage("img/shine3.png");
-        starImg = ImageIO.GetInstance().getImage("img/decorations/star.png");
-        starShadow = ImageIO.GetInstance().getImage("img/decorations/starShadow.png");
-        capitalImg = ImageIO.GetInstance().getImage("img/decorations/capital.png");
-        capitalShadow = ImageIO.GetInstance().getImage("img/decorations/capitalShadow.png");
-        cityWalls = ImageIO.GetInstance().getImage("img/terrain/walls.png");
-//        road = ImageIO.GetInstance().getImage("img/terrain/road.png");
-        roadDhalf = ImageIO.GetInstance().getImage("img/terrain/road-d-half.png");
-        roadVhalf = ImageIO.GetInstance().getImage("img/terrain/road-v-half.png");
+//        backgroundImg = PLAIN.getTexture(null);
+        fogImg = TextureIO.GetInstance().getTexture("img/fog.png");
+        shineImg = TextureIO.GetInstance().getTexture("img/shine3.png");
+        starImg = TextureIO.GetInstance().getTexture("img/decorations/star.png");
+        starShadow = TextureIO.GetInstance().getTexture("img/decorations/starShadow.png");
+        capitalImg = TextureIO.GetInstance().getTexture("img/decorations/capital.png");
+        capitalShadow = TextureIO.GetInstance().getTexture("img/decorations/capitalShadow.png");
+        cityWalls = TextureIO.GetInstance().getTexture("img/terrain/walls.png");
+//        road = TextureIO.GetInstance().getTexture("img/terrain/road.png");
+        roadDhalf = TextureIO.GetInstance().getTexture("img/terrain/road-d-half.png");
+        roadVhalf = TextureIO.GetInstance().getTexture("img/terrain/road-v-half.png");
 
         int expLength = nTilesExplosion * delay;
         int pierceLength = nTilesPierce * delay;
-        explosionEffect = new Image[expLength];
-        pierceEffect = new Image[pierceLength];
+        explosionEffect = new Texture[expLength];
+        pierceEffect = new Texture[pierceLength];
         for (int i = 0; i < nTilesExplosion; i++) {
             for (int j = 0; j < delay; j++) {
-                explosionEffect[i*delay+j] = ImageIO.GetInstance().getImage("img/weapons/effects/explosion/tile" + String.format("%03d", i) + ".png");
+                explosionEffect[i*delay+j] = TextureIO.GetInstance().getTexture("img/weapons/effects/explosion/tile" + String.format("%03d", i) + ".png");
             }
         }
         for (int i = 0; i < nTilesPierce; i++) {
             for (int j = 0; j < delay; j++) {
-                pierceEffect[i*delay+j] = ImageIO.GetInstance().getImage("img/weapons/effects/pierce/tile" + String.format("%03d", i) + ".png");
+                pierceEffect[i*delay+j] = TextureIO.GetInstance().getTexture("img/weapons/effects/pierce/tile" + String.format("%03d", i) + ".png");
             }
         }
         int nPlayers = game.getPlayers().length;
-        slashEffect = new Image[nPlayers][];
-        healEffect = new Image[nPlayers][];
-        convertEffect = new Image[nPlayers][];
+        slashEffect = new Texture[nPlayers][];
+        healEffect = new Texture[nPlayers][];
+        convertEffect = new Texture[nPlayers][];
         int effLength = nTilesEffect * delay;
         for (int j = 0; j < nPlayers; j++) {
-            slashEffect[j%nPlayers] = new Image[effLength];
-            healEffect[j%nPlayers] = new Image[effLength];
-            convertEffect[j%nPlayers] = new Image[effLength];
+            slashEffect[j%nPlayers] = new Texture[effLength];
+            healEffect[j%nPlayers] = new Texture[effLength];
+            convertEffect[j%nPlayers] = new Texture[effLength];
             for (int i = 0; i < nTilesEffect; i++) {
                 for (int k = 0; k < delay; k++) {
-                    slashEffect[j % nPlayers][i*delay + k] = ImageIO.GetInstance().getImage("img/weapons/effects/slash/" + j + "/tile" + String.format("%03d", i) + ".png");
-                    healEffect[j % nPlayers][i*delay + k] = ImageIO.GetInstance().getImage("img/weapons/effects/heal/" + j + "/tile" + String.format("%03d", i) + ".png");
-                    convertEffect[j % nPlayers][i*delay + k] = ImageIO.GetInstance().getImage("img/weapons/effects/convert/" + j + "/tile" + String.format("%03d", i) + ".png");
+                    slashEffect[j % nPlayers][i*delay + k] = TextureIO.GetInstance().getTexture("img/weapons/effects/slash/" + j + "/tile" + String.format("%03d", i) + ".png");
+                    healEffect[j % nPlayers][i*delay + k] = TextureIO.GetInstance().getTexture("img/weapons/effects/heal/" + j + "/tile" + String.format("%03d", i) + ".png");
+                    convertEffect[j % nPlayers][i*delay + k] = TextureIO.GetInstance().getTexture("img/weapons/effects/convert/" + j + "/tile" + String.format("%03d", i) + ".png");
                 }
             }
         }
@@ -201,7 +207,7 @@ public class GameView extends JComponent {
         for(int i = 0; i < gridSize; ++i) {
             for(int j = 0; j < gridSize; ++j) {
                 Types.TERRAIN t = board.getTerrainAt(i,j);
-                Image toPaint;
+                Texture toPaint;
                 if (t == null || t == FOG) {
                     toPaint = fogImg;
                 } else if (t != CITY) {
@@ -219,7 +225,7 @@ public class GameView extends JComponent {
             for(int j = 0; j < gridSize; ++j) {
                 Types.TERRAIN t = board.getTerrainAt(i,j);
                 if (t == CITY) {
-                    Image toPaint = t.getTexture(null);
+                    Texture toPaint = t.getTexture(null);
                     paintImageRotated(g, j * CELL_SIZE, i * CELL_SIZE, toPaint, CELL_SIZE, panTranslate);
                 }
             }
@@ -375,7 +381,7 @@ public class GameView extends JComponent {
         for (Map.Entry<Integer, ArrayList<Action>> e: actions.entrySet()) {
             for (Action a : e.getValue()) {
                 if (a.getActionType() == EXAMINE || a.getActionType() == CAPTURE) {
-                    Image actionImg = Types.ACTION.getTexture(a);
+                    Texture actionImg = Types.ACTION.getTexture(a);
                     if (actionImg != null) {
                         Vector2d pos = GUI.getActionPosition(gameState, a);
 
@@ -410,7 +416,7 @@ public class GameView extends JComponent {
         }
     }
 
-    private static void paintImageRotated(Graphics2D gphx, int x, int y, Image img, int imgSize, Vector2d panTranslate,
+    private static void paintImageRotated(Graphics2D gphx, int x, int y, Texture img, int imgSize, Vector2d panTranslate,
                                           double angle, int xAnchor, int yAnchor) {
         if (img != null) {
             int w = img.getWidth(null);
@@ -426,7 +432,7 @@ public class GameView extends JComponent {
         }
     }
 
-    private static void paintImage(Graphics2D gphx, int x, int y, Image img, int imgSize, Vector2d panTranslate)
+    private static void paintImage(Graphics2D gphx, int x, int y, Texture img, int imgSize, Vector2d panTranslate)
     {
         if (img != null) {
             int w = img.getWidth(null);
@@ -681,8 +687,8 @@ public class GameView extends JComponent {
     }
 
 
-    private Image getContextImg(int i, int j, Types.TERRAIN t) {
-        Image toPaint;
+    private Texture getContextImg(int i, int j, Types.TERRAIN t) {
+        Texture toPaint;
         boolean cornerUL = (i == 0 && j == 0);
         boolean cornerDR = (i == gridSize - 1 && j == gridSize -1);
         Types.TERRAIN diagUR = null;
@@ -826,7 +832,7 @@ public class GameView extends JComponent {
     // TODO: can draw more effects of actions, e.g. healing, disband
     void paintEffects(Graphics2D g) {
         if (effectDrawingIdx != -1) {
-            Image effectImage = null;
+            Texture effectImage = null;
             if (effectType == EFFECT.EXPLOSION) {
                 if (effectDrawingIdx >= explosionEffect.length) {
                     effectDrawingIdx = -1;  // Finished
@@ -891,14 +897,14 @@ public class GameView extends JComponent {
             animatedAction = null;
 
             Unit source = (Unit) gameState.getBoard().getActor(a.getUnitId());
-            Image weapon1 = source.getType().getWeaponImage(source.getTribeId());
+            Texture weapon1 = source.getType().getWeaponImage(source.getTribeId());
 
             if (weapon1 != null) {
                 // Pause the game, paint this weapon image travelling from attacker to target
                 game.setAnimationPaused(true);
-                Pair<Image, Vector2d> sourceAnimationInfo = new Pair<>(weapon1, new Vector2d(source.getPosition().y * CELL_SIZE, source.getPosition().x * CELL_SIZE));
+                Pair<Texture, Vector2d> sourceAnimationInfo = new Pair<>(weapon1, new Vector2d(source.getPosition().y * CELL_SIZE, source.getPosition().x * CELL_SIZE));
                 ArrayList<Unit> targets = new ArrayList<>();
-                Image weapon2 = null;
+                Texture weapon2 = null;
 
                 if (a.getActionType() == ATTACK) {
                     Unit t = (Unit) gameState.getBoard().getActor(((Attack) a).getTargetId());
@@ -923,7 +929,7 @@ public class GameView extends JComponent {
                 }
 
                 for (Unit target: targets) {
-                    Pair<Image, Vector2d> targetAnimationInfo = new Pair<>(weapon2, new Vector2d(target.getPosition().y * CELL_SIZE, target.getPosition().x * CELL_SIZE));
+                    Pair<Texture, Vector2d> targetAnimationInfo = new Pair<>(weapon2, new Vector2d(target.getPosition().y * CELL_SIZE, target.getPosition().x * CELL_SIZE));
                     animationSpeed.add(Math.max(1.0,
                             Math.min(25.0/(FRAME_DELAY+25), manhattanDistance(source.getPosition(), target.getPosition()) * (2.5/(FRAME_DELAY+25)))));
                     actionAnimationUnitsTribe.add(new Pair<>(source.getTribeId(), target.getTribeId()));
@@ -940,8 +946,8 @@ public class GameView extends JComponent {
         if (sourceTargetAnimationInfo.size() > 0) {
             ArrayList<Integer> finished = new ArrayList<>();
             for (int i = 0; i < sourceTargetAnimationInfo.size(); i++) {
-                Pair<Image,Vector2d> source = sourceTargetAnimationInfo.get(i).getFirst();
-                Pair<Image,Vector2d> target = sourceTargetAnimationInfo.get(i).getSecond();
+                Pair<Texture,Vector2d> source = sourceTargetAnimationInfo.get(i).getFirst();
+                Pair<Texture,Vector2d> target = sourceTargetAnimationInfo.get(i).getSecond();
 
                 // Sprite not yet reached its destination, paint current and calculate next
                 Vector2d currentPosition = source.getSecond().copy();
