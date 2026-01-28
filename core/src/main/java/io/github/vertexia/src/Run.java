@@ -4,8 +4,6 @@ import io.github.vertexia.src.core.Types;
 import io.github.vertexia.src.core.game.Game;
 import org.json.JSONArray;
 import io.github.vertexia.src.players.*;
-import io.github.vertexia.src.gui.GUI;
-import io.github.vertexia.src.gui.WindowInput;
 import io.github.vertexia.src.players.emcts.EMCTSAgent;
 import io.github.vertexia.src.players.emcts.EMCTSParams;
 import io.github.vertexia.src.players.heuristics.PrunePortfolioHeuristic;
@@ -30,35 +28,15 @@ import static io.github.vertexia.src.core.Types.TRIBE.OUMAJI;
 
 class Run {
 
-    /**
-     * Runs 1 game.
-     * @param g - game to run
-     * @param ki - Key controller
-     * @param ac - Action controller
-     */
-    static void runGame(Game g, KeyController ki, ActionController ac) {
-        WindowInput wi = null;
-        GUI frame = null;
-        if (VISUALS) {
-            wi = new WindowInput();
-            wi.windowClosed = false;
-            frame = new GUI(g, "Tribes", ki, wi, ac, false);
-            frame.addWindowListener(wi);
-            frame.addKeyListener(ki);
-        }
-
-        g.run(frame, wi);
-    }
-
 
     /**
      * Runs a game, no visuals nor human player
-     * @param g - game to run
      */
-    static void runGame(Game g) {
-        g.run(null, null);
+    static void runGame(Game game) {
+        while (!game.gameOver()) {
+            game.update();
+        }
     }
-
 
     public enum PlayerType
     {

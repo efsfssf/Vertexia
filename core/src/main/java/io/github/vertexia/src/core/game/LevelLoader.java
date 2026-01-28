@@ -13,11 +13,12 @@ import java.util.Random;
 
 class LevelLoader
 {
-    private Dimension size;
+    private int width;
+    private int height;
 
     LevelLoader()
     {
-        size = new Dimension();
+
     }
 
     /**
@@ -27,8 +28,8 @@ class LevelLoader
     Board buildLevel(String[] lines, Random rnd) {
 
         // Dimensions of the level read from the file.
-        size.width = lines.length;
-        size.height = lines.length;
+        width  = lines.length;
+        height = lines.length;
 
         Tribe[] tribes = extractTribes(lines);
         Board board = new Board();
@@ -36,10 +37,10 @@ class LevelLoader
         int tribeCounter = 0;
         int numTribes = tribes.length;
 
-        board.init(size.width, tribes);
+        board.init(width, tribes);
 
         //Go through every token in the level file
-        for (int i = 0; i < size.height; ++i) {
+        for (int i = 0; i < height; ++i) {
             String line = lines[i];
 
             String[] tile = line.split(",");
@@ -119,7 +120,7 @@ class LevelLoader
     private Tribe[] extractTribes(String[] lines)
     {
         ArrayList<Types.TRIBE> tribes_list = new ArrayList<>();
-        for (int i = 0; i < size.height; ++i) {
+        for (int i = 0; i < height; ++i) {
             String line = lines[i];
             String[] tile = line.split(",");
             for (String s : tile) {

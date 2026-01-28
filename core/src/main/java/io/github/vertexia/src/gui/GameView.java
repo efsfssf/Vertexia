@@ -100,17 +100,23 @@ public class GameView implements Screen {
         this.game = game;
         this.ac = ac;
         this.selection = new SelectionState();
-        this.board = game.getBoard().copy();
         this.panTranslate = new Vector2d(0, 0);
         dimension = new Vector2(
             Gdx.graphics.getWidth(),
             Gdx.graphics.getHeight()
         );
-
-
-        gridSize = board.getSize();
 //        int size = gridSize * CELL_SIZE;
 //        int d = (int) Math.sqrt(size * size * 2);
+
+        int w = Gdx.graphics.getWidth();
+        int h = Gdx.graphics.getHeight();
+
+        // диагональ экрана
+        double screenDiagonal = Math.sqrt(w * w + h * h);
+
+        CELL_SIZE = Math.max(16, (int)(0.038 * screenDiagonal));
+
+        Gdx.app.log("GameView", "CELL_SIZE = " + CELL_SIZE);
 
         this.batch = new SpriteBatch();
         this.shapes = new ShapeRenderer();
@@ -132,23 +138,7 @@ public class GameView implements Screen {
                 pierceEffect[i*delay+j] = TextureIO.GetInstance().getTexture("img/weapons/effects/pierce/tile" + String.format("%03d", i) + ".png");
             }
         }
-        int nPlayers = game.getPlayers().length;
-        slashEffect = new Texture[nPlayers][];
-        healEffect = new Texture[nPlayers][];
-        convertEffect = new Texture[nPlayers][];
-        int effLength = nTilesEffect * delay;
-        for (int j = 0; j < nPlayers; j++) {
-            slashEffect[j%nPlayers] = new Texture[effLength];
-            healEffect[j%nPlayers] = new Texture[effLength];
-            convertEffect[j%nPlayers] = new Texture[effLength];
-            for (int i = 0; i < nTilesEffect; i++) {
-                for (int k = 0; k < delay; k++) {
-                    slashEffect[j % nPlayers][i*delay + k] = TextureIO.GetInstance().getTexture("img/weapons/effects/slash/" + j + "/tile" + String.format("%03d", i) + ".png");
-                    healEffect[j % nPlayers][i*delay + k] = TextureIO.GetInstance().getTexture("img/weapons/effects/heal/" + j + "/tile" + String.format("%03d", i) + ".png");
-                    convertEffect[j % nPlayers][i*delay + k] = TextureIO.GetInstance().getTexture("img/weapons/effects/convert/" + j + "/tile" + String.format("%03d", i) + ".png");
-                }
-            }
-        }
+
 
         sourceTargetAnimationInfo = new ArrayList<>();
         animationSpeed = new ArrayList<>();
@@ -405,12 +395,12 @@ public class GameView implements Screen {
             for(int j = 0; j < gridSize; ++j) {
                 Unit u = board.getUnitAt(i,j);
                 if (u != null) {
-                    int imgSize = (int) (CELL_SIZE * 0.75);
-                    if (u instanceof SuperUnit || u instanceof Catapult) imgSize = CELL_SIZE;
+                    int imgSize = Math.max(1, (int)(CELL_SIZE * 0.75));
+                    if (u instanceof SuperUnit || u instanceof Catapult) imgSize = Math.max(1, CELL_SIZE);
 
                     Vector2d rotated = rotatePoint(j, i);
-                    int x = rotated.x + CELL_SIZE*CELL_SIZE/4/imgSize;
-                    int y = (int)(rotated.y - imgSize/1.5);
+                    int x = rotated.x + CELL_SIZE / 4;
+                    int y = (int)(rotated.y - imgSize * 0.75f);
 
                     ArrayList<Action> possibleActions = gameState.getUnitActions(u);
                     boolean exhausted = (possibleActions == null || possibleActions.size() == 0);
@@ -432,7 +422,8 @@ public class GameView implements Screen {
 //                    g.drawString(u.getCurrentHP() + "/" + u.getMaxHP(), x + g.getFont().getSize()/2 + panTranslate.x, y + panTranslate.y);
 //                    g.setFont(f);
                     String hp = u.getCurrentHP() + "/" + u.getMaxHP();
-                    font.getData().setScale(CELL_SIZE / 20f);
+                    float fontScale = Math.max(0.5f, CELL_SIZE / 20f);
+                    font.getData().setScale(fontScale);
                     drawText(batch, hp,
                         x + CELL_SIZE / 4f,
                         y + CELL_SIZE / 4f
@@ -803,16 +794,41 @@ public class GameView implements Screen {
 //    }
 
 
+    private void loadEffectsIfNeeded() {
+        boolean effectsLoaded = false;
+        if (effectsLoaded) return;
+
+        int nPlayers = game.getPlayers().length;
+        slashEffect = new Texture[nPlayers][];
+        healEffect = new Texture[nPlayers][];
+        convertEffect = new Texture[nPlayers][];
+        int effLength = nTilesEffect * delay;
+        for (int j = 0; j < nPlayers; j++) {
+            slashEffect[j%nPlayers] = new Texture[effLength];
+            healEffect[j%nPlayers] = new Texture[effLength];
+            convertEffect[j%nPlayers] = new Texture[effLength];
+            for (int i = 0; i < nTilesEffect; i++) {
+                for (int k = 0; k < delay; k++) {
+                    slashEffect[j % nPlayers][i*delay + k] = TextureIO.GetInstance().getTexture("img/weapons/effects/slash/" + j + "/tile" + String.format("%03d", i) + ".png");
+                    healEffect[j % nPlayers][i*delay + k] = TextureIO.GetInstance().getTexture("img/weapons/effects/heal/" + j + "/tile" + String.format("%03d", i) + ".png");
+                    convertEffect[j % nPlayers][i*delay + k] = TextureIO.GetInstance().getTexture("img/weapons/effects/convert/" + j + "/tile" + String.format("%03d", i) + ".png");
+                }
+            }
+        }
+    }
+
+
     /**
      * Paints the board
      * @param gs current game state
      */
-    void paint(GameState gs)
+    public void paint(GameState gs)
     {
         //The tribe Id of which the turn gs at this point
         //int gameTurn = 0;// gs.getTick() % gs.getTribes().length;
         gameState = gs; //.copy(gameTurn);
         board = gameState.getBoard();
+        gridSize = board.getSize();
     }
 
     void updatePan(Vector2d panTranslate) {
@@ -1217,7 +1233,21 @@ public class GameView implements Screen {
         return null;
     }
 
-    @Override public void show() {}
+    @Override
+    public void show() {
+        loadEffectsIfNeeded();
+
+        int w = Gdx.graphics.getWidth();
+        int h = Gdx.graphics.getHeight();
+
+        // диагональ экрана
+        double screenDiagonal = Math.sqrt(w * w + h * h);
+
+        CELL_SIZE = Math.max(16, (int)(0.038 * screenDiagonal));
+
+        Gdx.app.log("GameView", "CELL_SIZE = " + CELL_SIZE);
+    }
+
     @Override public void resize(int width, int height) {}
     @Override public void pause() {}
     @Override public void resume() {}

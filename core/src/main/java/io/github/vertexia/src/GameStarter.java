@@ -6,12 +6,15 @@ import com.badlogic.gdx.Gdx;
 
 import org.json.JSONObject;
 
+import io.github.vertexia.src.core.game.GameState;
 import io.github.vertexia.src.gui.GameView;
 import io.github.vertexia.src.players.ActionController;
 
 public class GameStarter extends Game {
 
     private ActionController ac;
+    private io.github.vertexia.src.core.game.Game game;
+    private GameView gameView;
 
     @Override
     public void create() {
@@ -29,13 +32,20 @@ public class GameStarter extends Game {
         ac = new ActionController();
 
         // ⚠️ ВАЖНО: Play.start() ДОЛЖЕН ВЕРНУТЬ Game (core)
-        io.github.vertexia.src.core.game.Game coreGame = play.startAndGetGame();
+        game = play.startAndGetGame();
 
         // 3. Устанавливаем LibGDX Screen
-        setScreen(new GameView(coreGame, ac));
+        gameView = new GameView(game, ac);
     }
 
-    @Override public void render() {}
+    @Override
+    public void render() {
+        game.update();
+        GameState gs = game.getGameState();
+        gameView.paint(gs);
+        gameView.render(Gdx.graphics.getDeltaTime());
+    }
+
     @Override public void resize(int width, int height) {}
     @Override public void pause() {}
     @Override public void resume() {}

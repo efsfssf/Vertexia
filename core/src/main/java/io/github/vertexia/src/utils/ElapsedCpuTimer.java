@@ -4,22 +4,15 @@ package io.github.vertexia.src.utils;
  * Created by diego on 26/02/14.
  */
 
-
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
-
 public class ElapsedCpuTimer {
 
-    private static final boolean OS_WIN = System.getProperty("os.name").contains("Windows");
-
     // allows for easy reporting of elapsed time
-    private ThreadMXBean bean = ManagementFactory.getThreadMXBean();
     private long oldTime;
     private long maxTime;
     private int nIters;
 
     public ElapsedCpuTimer() {
-        oldTime = getTime();
+        oldTime = System.nanoTime();
         nIters = 0;
     }
 
@@ -28,13 +21,12 @@ public class ElapsedCpuTimer {
         ElapsedCpuTimer newCpuTimer = new ElapsedCpuTimer();
         newCpuTimer.maxTime = this.maxTime;
         newCpuTimer.oldTime = this.oldTime;
-        newCpuTimer.bean = this.bean;
         newCpuTimer.nIters = this.nIters;
         return newCpuTimer;
     }
 
     public long elapsed() {
-        return getTime() - oldTime;
+        return System.nanoTime() - oldTime;
     }
 
     public long elapsedNanos() {
@@ -64,23 +56,6 @@ public class ElapsedCpuTimer {
         String ret = elapsed() / 1000000.0 + " ms elapsed";
         //reset();
         return ret;
-    }
-
-    private long getTime() {
-        return getCpuTime();
-    }
-
-    private long getCpuTime() {
-
-        if(OS_WIN)
-            return System.nanoTime();
-
-        if (bean.isCurrentThreadCpuTimeSupported()) {
-            return bean.getCurrentThreadCpuTime();
-        } else {
-            throw new RuntimeException("CpuTime NOT Supported");
-        }
-
     }
 
     public void setMaxTimeMillis(long time) {

@@ -39,7 +39,7 @@ public class Play {
         }
     }
 
-    private Game buildGameFromConfig(JSONObject config) throws Exception {
+    private Game buildGameFromConfig(JSONObject config) {
 
         try {
             if (config != null && config.length() > 0) {
@@ -86,6 +86,7 @@ public class Play {
 
                 //1. Play one game with visuals using the Level Generator:
                 if (runMode.equalsIgnoreCase("PlayLG")) {
+                    System.out.println("Play Mode: PlayLG");
                     return prepareGameFromGenerator(tribes, levelSeed, playerTypes, gameMode);
 
                 //2. Play one game with visuals from a file:
@@ -107,8 +108,8 @@ public class Play {
         }catch(Exception e)
         {
             e.printStackTrace();
+            throw new IllegalStateException("Failed to build game from config", e);
         }
-        System.out.println("Game build failed");
         return null;
     }
 

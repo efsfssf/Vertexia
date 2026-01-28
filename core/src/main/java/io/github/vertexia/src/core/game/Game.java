@@ -8,8 +8,6 @@ import io.github.vertexia.src.core.actors.Tribe;
 import io.github.vertexia.src.players.Agent;
 import io.github.vertexia.src.players.HumanAgent;
 import io.github.vertexia.src.utils.*;
-import io.github.vertexia.src.gui.GUI;
-import io.github.vertexia.src.gui.WindowInput;
 import io.github.vertexia.src.utils.mapelites.Feature;
 import io.github.vertexia.src.utils.stats.AIStats;
 import io.github.vertexia.src.utils.stats.GameplayStats;
@@ -97,14 +95,18 @@ public class Game {
      */
     public void init(ArrayList<Agent> players, long levelgen_seed, Types.TRIBE[] tribes, long seed, Types.GAME_MODE gameMode) {
 
-        //Initiate the bare bones of the main game classes
-        this.seed = seed;
-        this.rnd = new Random(seed);
-        this.gs = new GameState(rnd, gameMode);
+        try {
+            //Initiate the bare bones of the main game classes
+            this.seed = seed;
+            this.rnd = new Random(seed);
+            this.gs = new GameState(rnd, gameMode);
 
-        this.gs.init(levelgen_seed, tribes);
-        initGameStructures(players, tribes);
-        updateAssignedGameStates();
+            this.gs.init(levelgen_seed, tribes);
+            initGameStructures(players, tribes);
+            updateAssignedGameStates();
+        } catch (Exception e) {
+            throw new IllegalStateException("Error during initialization: " + e);
+        }
     }
 
     /**
@@ -124,6 +126,49 @@ public class Game {
         initGameStructures(players, tribes.length);
         updateAssignedGameStates();
     }
+
+    public void update() {
+        if (gameOver()) return;
+
+        Tribe[] tribes = gs.getTribes();
+
+        for (int i = 0; i < numPlayers; i++) {
+            Tribe tribe = tribes[i];
+
+            if (tribe == null) continue;
+            if (tribe.getWinner() != Types.RESULT.INCOMPLETE) continue;
+
+            processTurn(i, tribe);
+            if (gameOver()) return;
+        }
+
+        gs.incTick();
+    }
+
+    private void processTurn(int playerID, Tribe tribe) {
+
+        gs.initTurn(tribe);
+        gs.computePlayerActions(tribe);
+        updateAssignedGameStates();
+
+        Agent ag = players[playerID];
+        boolean continueTurn = true;
+
+        while (continueTurn) {
+            Action action = ag.act(gameStateObservations[playerID], null);
+
+            if (action == null || action.getActionType() == END_TURN) {
+                break;
+            }
+
+            gs.next(action);
+            gs.computePlayerActions(tribe);
+            updateAssignedGameStates();
+        }
+
+        gs.endTurn(tribe);
+    }
+
 
     /**
      * Initializes game structures depending on number of players and tribes
@@ -201,243 +246,8 @@ public class Game {
         this.gameStateObservations = new GameState[numPlayers];
     }
 
-    /**
-     * Runs a game once. Receives frame and window input. If any is null, forces a run with no visuals.
-     *
-     * @param frame window to draw the game
-     * @param wi    input for the window.
-     */
-    public void run(GUI frame, WindowInput wi) {
-        if (frame == null || wi == null)
-            VISUALS = false;
-
-        boolean firstEnd = true;
-
-        while (frame == null || !frame.isClosed()) {
-//            System.out.println("Frame closed: " + frame.isClosed());
-            // Loop while window is still open, even if the game ended.
-            // If not playing with visuals, loop is broken when game's ended.
-
-            boolean gameOver = gameOver();
-            // Check end of game
-            if (firstEnd && gameOver) {
-                terminate();
-
-                firstEnd = false;
-
-                printGameResults();
-                if (LOG_STATS) {
-                    TreeSet<TribeResult> ranking = getCurrentRanking();
-                    for (TribeResult tr : ranking) {
-                        int idx = tr.getId();
-                        AIStats ais = aiStats[idx];
-                        if(VERBOSE) ais.print();
-                        GameplayStats gps = gpStats[idx];
-                        gps.logGameEnd(tr);
-                        if(VERBOSE) {
-                            gps.print();
-
-                            ArrayList<GameplayStats> agps = new ArrayList<>();
-                            agps.add(gps);
-                            for (Feature f : Feature.values()) {
-                                double val = f.getFeatureValue(agps);
-
-                                String[] agentChunks = players[gps.getPlayerID()].getClass().toString().split("\\.");
-                                String agentName = agentChunks[agentChunks.length - 1];
-                                System.out.println("GPS:" + gps.getPlayerID() + ":" + agentName + ":" + f + ":" + val);
-                            }
-                        }
 
 
-                    }
-                }
-
-                if (!VISUALS || frame == null) {
-                    // The game has ended, end the loop if we're running without visuals.
-                    break;
-                }
-            }
-            if (!gameOver) {
-                tick(frame);
-            } else {
-                frame.update(getGameState(-1), null);
-            }
-        }
-    }
-
-    /**
-     * Ticks the game forward. Asks agents for actions and applies returned actions to obtain the next game state.
-     *
-     * @param frame GUI of the game
-     */
-    private void tick(GUI frame) {
-
-//        System.out.println("Tick: " + gs.getTick());
-        Tribe[] tribes = gs.getTribes();
-        for (int i = 0; i < numPlayers; i++) {
-            Tribe tribe = tribes[i];
-
-            if (tribe.getWinner() != Types.RESULT.INCOMPLETE)
-                continue; //We don't do anything for tribes that have already finished.
-
-
-            //play the full turn for this player
-            processTurn(i, tribe, frame);
-
-            // Save Game
-            if (Constants.WRITE_SAVEGAMES)
-                GameSaver.writeTurnFile(gs, getBoard(), seed);
-
-            //it may be that this player won the game, no more playing.
-            if (gameOver()) {
-                return;
-            }
-
-            // Check if game should be paused automatically after this turn
-            if (VISUALS && frame != null && frame.pauseAfterTurn()) {
-                paused = true;
-                frame.setPauseAfterTurn(false);
-            }
-        }
-
-        // Check if game should be paused automatically after this tick
-        if (VISUALS && frame != null && frame.pauseAfterTick()) {
-            paused = true;
-            frame.setPauseAfterTick(false);
-        }
-
-        //All turns passed, time to increase the tick.
-        gs.incTick();
-    }
-
-    /**
-     * Process a turn for a given player. It queries the player for an action until no more
-     * actions are available or the player returns a EndTurnAction action.
-     *
-     * @param playerID ID of the player whose turn is being processed.
-     * @param tribe    tribe that corresponds to this player.
-     */
-    private void processTurn(int playerID, Tribe tribe, GUI frame) {
-        //Init the turn for this tribe (stars, unit reset, etc).
-        gs.initTurn(tribe);
-
-        //Compute the initial player actions and assign the game states.
-        gs.computePlayerActions(tribe);
-        updateAssignedGameStates();
-
-        //Take the player for this turn
-        Agent ag = players[playerID];
-        boolean isHumanPlayer = ag instanceof HumanAgent;
-
-        //start the timer to the max duration
-        ElapsedCpuTimer ect = new ElapsedCpuTimer();
-        ect.setMaxTimeMillis(TURN_TIME_MILLIS);
-
-        // Keep track of time remaining for turn thinking
-        long remainingECT = TURN_TIME_MILLIS;
-
-        boolean continueTurn = true;
-        int curActionCounter = 0;
-
-        // Timer for action execution, delay introduced from GUI. Another delay is added at the end of the turn to
-        // make sure all updates are executed and displayed to humans.
-        ElapsedCpuTimer actionDelayTimer = null;
-        ElapsedCpuTimer endTurnDelay = null;
-        if (VISUALS && frame != null) {
-            actionDelayTimer = new ElapsedCpuTimer();
-            actionDelayTimer.setMaxTimeMillis(FRAME_DELAY);
-        }
-
-        while (frame == null || !frame.isClosed()) {
-            // Keep track of action played in this loop, null if no action.
-            Action action = null;
-
-            // Check GUI end of turn timer
-            if (endTurnDelay != null && endTurnDelay.remainingTimeMillis() <= 0) break;
-
-            if (!paused && !animationPaused) {
-                // Action request and execution if turn should be continued
-                if (continueTurn) {
-                    //noinspection ConstantConditions
-                    if ((!VISUALS || frame == null) || actionDelayTimer.remainingTimeMillis() <= 0 || isHumanPlayer) {
-                        // Get one action from the player
-                        ect.setMaxTimeMillis(remainingECT);  // Reset timer ignoring all other timers or updates
-                        action = ag.act(gameStateObservations[playerID], ect);
-                        remainingECT = ect.remainingTimeMillis(); // Note down the remaining time to use it for the next iteration
-
-                        if (LOG_STATS && !isHumanPlayer)
-                            updateBranchingFactor(aiStats[playerID], gs.getTick(), gameStateObservations[playerID], ag);
-
-                        if(LOG_STATS)
-                            updateGameplayStatsMove(gpStats[playerID], action, gameStateObservations[playerID]);
-
-                        curActionCounter++;
-
-                        if (actionDelayTimer != null) {  // Reset action delay timer for next action request
-                            actionDelayTimer = new ElapsedCpuTimer();
-                            actionDelayTimer.setMaxTimeMillis(FRAME_DELAY);
-                        }
-
-                        // Continue this turn if there are still available actions and end turn was not requested.
-                        // If the agent is human, let him play for now.
-                        continueTurn = !gs.isTurnEnding();
-                        if (!isHumanPlayer) {
-                            ect.setMaxTimeMillis(remainingECT);
-                            boolean timeOut = TURN_TIME_LIMITED && ect.exceededMaxTime();
-                            continueTurn &= gs.existAvailableActions(tribe) && !timeOut;
-                        }
-
-                    }
-                } else if (endTurnDelay == null) {
-                    // If turn should be ending (and we've not already triggered end turn), the action is automatically EndTurn
-                    action = new EndTurn(gs.getActiveTribeID());
-                }
-            }
-
-            // Update GUI after every iteration
-            if (VISUALS && frame != null) {
-                boolean showAllBoard = Constants.GUI_FORCE_FULL_OBS || Constants.PLAY_WITH_FULL_OBS;
-
-                if (showAllBoard) frame.update(getGameState(-1), action);  // Full Obs
-                else frame.update(gameStateObservations[gs.getActiveTribeID()], action);        // Partial Obs
-
-                // Turn should be ending, start timer for delay of next action and show all updates
-                if (action != null && action.getActionType() == END_TURN) {
-                    if (isHumanPlayer) break;
-                    endTurnDelay = new ElapsedCpuTimer();
-                    endTurnDelay.setMaxTimeMillis(FRAME_DELAY);
-                }
-
-//                try {
-//                    Thread.sleep(10);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-            } else if (action != null && action.getActionType() == END_TURN) { // If no visuals and we should end the turn, just break out of loop here
-                break;
-            }
-
-            if (action != null && !VISUALS || frame != null && (action != null && !(action.getActionType() == ATTACK) ||
-                    (action = frame.getAnimatedAction()) != null)) {
-                // Play the action in the game and update the available actions list and observations
-                // Some actions are animated, the condition above checks if this animation is finished and retrieves
-                // the action after all the GUI updates.
-                gs.next(action);
-                gs.computePlayerActions(tribe);
-                updateAssignedGameStates();
-            }
-
-            if (gameOver()) {
-                break;
-            }
-        }
-
-        if(LOG_STATS)
-            updateGameplayStatsTurn(gpStats[playerID], gs);
-
-        // Ends the turn for this tribe (units that didn't move heal).
-        gs.endTurn(tribe);
-    }
 
     /**
      * Prints the results of the game.
@@ -549,9 +359,14 @@ public class Game {
      * @param playerIdx index of the player for which the game state is generated.
      * @return the game state.
      */
-    private GameState getGameState(int playerIdx) {
+    public GameState getGameState(int playerIdx) {
         return gs.copy(playerIdx);
     }
+
+    public GameState getGameState() {
+        return gs;
+    }
+
 
     /**
      * Returns the game board.
@@ -571,7 +386,7 @@ public class Game {
      * The winner of a game is determined by TribesConfig.GAME_MODE and TribesConfig.MAX_TURNS
      * @return true if the game has ended, false otherwise.
      */
-    boolean gameOver() {
+    public boolean gameOver() {
         return gs.gameOver();
     }
 

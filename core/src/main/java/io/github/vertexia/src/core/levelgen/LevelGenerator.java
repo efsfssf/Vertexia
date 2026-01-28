@@ -6,8 +6,8 @@ import static io.github.vertexia.src.core.Types.TRIBE.*;
 //import static io.github.vertexia.src.core.Types.RESOURCE.*;
 import io.github.vertexia.src.core.Types;
 import org.json.JSONObject;
-import io.github.vertexia.src.utils.file.IO;
-
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import java.io.FileWriter;
 import java.util.*;
 
@@ -50,7 +50,8 @@ public class LevelGenerator {
 
         //Read the JSON that contains all the probability values for all the tribes.
         try {
-            this.data =  new IO().readJSON("terrainProbs.json");
+            FileHandle fh = Gdx.files.internal("terrainProbs.json");
+            this.data = new JSONObject(fh.readString("UTF-8"));
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -610,27 +611,17 @@ public class LevelGenerator {
      * @param filename path to save the level.
      */
     public void toCSV(String filename) {
-        try {
-            FileWriter writer = new FileWriter(filename);
-            writer.append(level[0]);
-            writer.append(',');
-            for(int i = 1; i < mapSize*mapSize; i++) {
-                if(i % mapSize == 0) {
-                    writer.append('\n');
-                    writer.append(level[i]);
-                    writer.append(',');
-                } else if(i % mapSize == mapSize - 1) {
-                    writer.append(level[i]);
-                }else {
-                    writer.append(level[i]);
-                    writer.append(',');
-                }
-            }
-            writer.flush();
-            writer.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        FileHandle fh = Gdx.files.local(filename);
+        fh.writeString("", false); // очистить
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < mapSize * mapSize; i++) {
+            sb.append(level[i]);
+            if ((i + 1) % mapSize == 0) sb.append('\n');
+            else sb.append(',');
         }
+
+        fh.writeString(sb.toString(), false);
     }
 
     /**
@@ -680,14 +671,14 @@ public class LevelGenerator {
         return allLines;
     }
 
-    public static void main(String[] args) {
-
-        long genSeed = System.currentTimeMillis();
-        LevelGenerator gen = new LevelGenerator(genSeed);
-        gen.init(11, 3, 4, 0.5, new Types.TRIBE[]{XIN_XI, OUMAJI});
-        gen.generate();
-        gen.toCSV("levels/levelgen_test.csv");
-        gen.print();
-
-    }
+//    public static void main(String[] args) {
+//
+//        long genSeed = System.currentTimeMillis();
+//        LevelGenerator gen = new LevelGenerator(genSeed);
+//        gen.init(11, 3, 4, 0.5, new Types.TRIBE[]{XIN_XI, OUMAJI});
+//        gen.generate();
+//        gen.toCSV("levels/levelgen_test.csv");
+//        gen.print();
+//
+//    }
 }
