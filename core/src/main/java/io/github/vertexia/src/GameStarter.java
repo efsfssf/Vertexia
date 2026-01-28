@@ -36,10 +36,12 @@ public class GameStarter extends Game {
 
         // 3. Устанавливаем LibGDX Screen
         gameView = new GameView(game, ac);
+        setScreen(gameView);
     }
 
     @Override
     public void render() {
+        super.render();
         game.update();
         GameState gs = game.getGameState();
         gameView.paint(gs);

@@ -55,7 +55,7 @@ public class GameView implements Screen {
     private Texture fogImg, shineImg;
     private SelectionState selection;
     private Vector2d panTranslate;  // Used to translate all coordinates for objects drawn on screen
-
+    private boolean effectsLoaded = false;
     private BitmapFont font;
 
     private Color progressColor = toColor(53, 183, 255);
@@ -176,6 +176,9 @@ public class GameView implements Screen {
 
     @Override
     public void render(float delta) {
+        if (gameState == null || board == null) {
+            return;
+        }
         Gdx.gl.glClearColor(0,0,0,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -232,6 +235,8 @@ public class GameView implements Screen {
 //    }
 
     private void updateActionableTiles() {
+        if (gameState == null) return;
+
         actionable = new boolean[gridSize][gridSize];
         HashMap<Integer, ArrayList<Action>> actions = gameState.getCityActions();
         for (Map.Entry<Integer, ArrayList<Action>> e: actions.entrySet()) {
@@ -795,7 +800,6 @@ public class GameView implements Screen {
 
 
     private void loadEffectsIfNeeded() {
-        boolean effectsLoaded = false;
         if (effectsLoaded) return;
 
         int nPlayers = game.getPlayers().length;
@@ -1239,6 +1243,10 @@ public class GameView implements Screen {
 
         int w = Gdx.graphics.getWidth();
         int h = Gdx.graphics.getHeight();
+
+        camera.setToOrtho(false, w, h);
+        camera.position.set(w / 2f, h / 2f, 0);
+        camera.update();
 
         // диагональ экрана
         double screenDiagonal = Math.sqrt(w * w + h * h);
