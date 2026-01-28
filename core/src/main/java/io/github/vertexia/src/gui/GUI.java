@@ -48,7 +48,7 @@ public class GUI extends JFrame {
     private GameView boardView;
     private TribeView tribeView;
     private TechView techView;
-    private InfoView infoView;
+    private SelectionState selection;
 
     // Zoomed screen dragging vars
     private Vector2d startDrag, endDrag, panTranslate;
@@ -92,9 +92,9 @@ public class GUI extends JFrame {
         this.stateHistory = new ArrayList<>();
         this.replayer = new ActionController();
 
-        infoView = new InfoView(ac);
+        this.selection = new SelectionState();
         panTranslate = new Vector2d(0,0);
-        boardView = new GameView(game, infoView, panTranslate);
+        boardView = new GameView(game, ac);
 
         // Create frame layout
         GridBagLayout gbl = new GridBagLayout();
@@ -151,13 +151,13 @@ public class GUI extends JFrame {
                 //Only provide information if clicking on a visible tile
                 Vector2d translate = boardView.getPanTranslate();
                 Vector2d ep = new Vector2d(e.getX() - translate.x, e.getY() - translate.y);
-                Vector2d p = GameView.rotatePointReverse((int)ep.x, (int)ep.y);
+                Vector2d p = boardView.rotatePointReverse((int)ep.x, (int)ep.y);
 
                 // If unit highlighted and action at new click valid for unit, execute action
                 if (game.getPlayers()[gs.getActiveTribeID()] instanceof HumanAgent ||
                         !DISABLE_NON_HUMAN_GRID_HIGHLIGHT) {
                     // Only do this if actions should be executed, or it is human agent playing
-                    Action candidate = getActionAt(p.x, p.y, infoView.getHighlightX(), infoView.getHighlightY());
+                    Action candidate = getActionAt(p.x, p.y, selection.x(), selection.y());
                     if (candidate != null) {
                         int n = 0;
                         if (candidate.getActionType() == DISBAND) {  // These actions needs confirmation before executing
@@ -212,7 +212,7 @@ public class GUI extends JFrame {
         mainPanel.addMouseWheelListener(e -> {
             Point2D mouseLocation = MouseInfo.getPointerInfo().getLocation();
             Point2D panelLocation = mainPanel.getLocationOnScreen();
-            Vector2d viewCenter = new Vector2d(boardView.getPreferredSize().width/2, boardView.getPreferredSize().height/2);
+            Vector2d viewCenter = new Vector2d(boardView.getViewSize().x/2, boardView.getViewSize().y/2); // boardView.getViewSize().x - Width, boardView.getViewSize().y - Height
             Vector2d diff = new Vector2d((int)(mouseLocation.getX() - panelLocation.getX() - viewCenter.x)/GUI_ZOOM_FACTOR,
                     (int)(mouseLocation.getY() - panelLocation.getY() - viewCenter.y)/GUI_ZOOM_FACTOR);
             if (e.getWheelRotation() < 0) {
